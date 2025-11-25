@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión – Cocina</title>
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <h2>Iniciar Sesión</h2>
+
+        <form id="loginForm">
+            <label>Correo:</label>
+            <input type="email" id="correo" required>
+
+            <label>Contraseña:</label>
+            <input type="password" id="password" required>
+
+            <button type="submit">Ingresar</button>
+
+            <div class="links">
+                <a href="register.html">Crear cuenta</a>
+                <a href="reset.html">¿Olvidaste tu contraseña?</a>
+            </div>
+        </form>
+
+        <p id="msg" class="msg"></p>
+    </div>
+</div>
+
+<script src="./js/login.js"></script>
+</body>
+</html>
