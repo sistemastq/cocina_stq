@@ -1,36 +1,97 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión – Cocina</title>
-    <link rel="stylesheet" href="./css/styles.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Iniciar Sesión – Cocina</title>
+<link rel="stylesheet" href="./css/styles.css" />
 </head>
-<body>
+<body class="bg-login">
+<div class="overlay"></div>
 
-<div class="container">
-    <div class="card">
-        <h2>Iniciar Sesión</h2>
 
-        <form id="loginForm">
-            <label>Correo:</label>
-            <input type="email" id="correo" required>
+<!-- Optional floating images -->
+<img src="./img/logo.png" class="floating-burger" style="left:10%; animation-delay:0s">
+<img src="./img/burger2.png" class="floating-burger" style="left:65%; animation-delay:4s">
 
-            <label>Contraseña:</label>
-            <input type="password" id="password" required>
 
-            <button type="submit">Ingresar</button>
+<div class="container auth-container">
+<div class="card auth-card animate-in">
+<img src="./img/logo.png" class="logo" alt="Logo" />
+<h2>Iniciar Sesión</h2>
 
-            <div class="links">
-                <a href="register.html">Crear cuenta</a>
-                <a href="reset.html">¿Olvidaste tu contraseña?</a>
-            </div>
-        </form>
 
-        <p id="msg" class="msg"></p>
-    </div>
+<form id="loginForm">
+<div class="input-group">
+<label>Correo</label>
+<input type="email" id="correo" required />
 </div>
 
+
+<div class="input-group">
+<label>Contraseña</label>
+<input type="password" id="password" required />
+</div>
+
+
+<button class="btn-main" type="submit">Ingresar</button>
+
+
+<div class="links">
+<a href="register.html">Crear cuenta</a>
+</div>
+</form>
+
+
+<p id="msg" class="msg"></p>
+</div>
+</div>
+
+
 <script src="./js/login.js"></script>
+<!-- MODAL: CARGANDO -->
+<div id="modalLoading" class="modal">
+  <div class="modal-content">
+    <div class="spinner"></div>
+    <p>Procesando...</p>
+  </div>
+</div>
+
+<!-- MODAL: LOGIN EXITOSO -->
+<div id="modalLogin" class="modal">
+  <div class="modal-content">
+    <h3>¡Bienvenido!</h3>
+    <p>Sesión iniciada correctamente.</p>
+    <button onclick="closeModal('modalLogin')">Aceptar</button>
+  </div>
+</div>
+
+<!-- MODAL: REGISTRO EXITOSO -->
+<div id="modalRegister" class="modal">
+  <div class="modal-content">
+    <h3>Usuario Registrado</h3>
+    <p>El usuario se ha creado exitosamente.</p>
+    <button onclick="closeModal('modalRegister')">Aceptar</button>
+  </div>
+</div>
+
+<!-- MODAL: CAMBIO DE ESTADO -->
+<div id="modalEstado" class="modal">
+  <div class="modal-content">
+    <h3>Estado Actualizado</h3>
+    <p>El pedido ha cambiado de estado.</p>
+    <button onclick="closeModal('modalEstado')">Aceptar</button>
+  </div>
+</div>
+
+<!-- MODAL: CIERRE SESIÓN -->
+<div id="modalLogout" class="modal">
+  <div class="modal-content">
+    <h3>Sesión Cerrada</h3>
+    <p>Has cerrado tu sesión correctamente.</p>
+    <button onclick="closeModal('modalLogout')">Aceptar</button>
+  </div>
+</div>
+
 </body>
 </html>

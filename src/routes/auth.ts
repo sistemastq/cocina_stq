@@ -4,9 +4,8 @@ import bcrypt from "bcrypt";
 
 const router = Router();
 
-/* ===============================
-     REGISTRO DE USUARIO
-================================ */
+
+//REGISTRO DE USUARIO
 router.post("/register", async (req, res) => {
 console.log("REQ BODY:", req.body);
   const { administrador, correo, password, puntoVenta } = req.body;
@@ -48,9 +47,8 @@ console.log("REQ BODY:", req.body);
   }
 });
 
-/* ===============================
-        LOGIN
-================================ */
+
+//LOGIN
 router.post("/login", async (req, res) => {
 
     

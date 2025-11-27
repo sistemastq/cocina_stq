@@ -5,25 +5,38 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     const password = document.getElementById("password").value;
     const msg = document.getElementById("msg");
 
-    const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ correo, password })
-    });
+    try {
+        const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ correo, password })
+        });
 
-    const data = await res.json();
+        const data = await res.json();
 
-    if (!res.ok) {
-        msg.textContent = data.error;
+        if (!res.ok) {
+            msg.textContent = data.error || "Error en el login";
+            msg.style.color = "red";
+            return;
+        }
+
+        msg.textContent = "Ingreso exitoso";
+        msg.style.color = "green";
+
+        // 🔥 GUARDAR SESIÓN DEL USUARIO
+        localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+        // Redirigir a la página Home
+        setTimeout(() => {
+            window.location.href = "/home.html";
+        }, 800);
+
+    } catch (error) {
+        console.error(error);
+        msg.textContent = "Ocurrió un error, intente nuevamente.";
         msg.style.color = "red";
-        return;
     }
-
-    msg.textContent = "Ingreso exitoso";
-    msg.style.color = "green";
-
-    setTimeout(() => {
-        window.location.href = "/login.html";
-    }, 800);
 });
+
+
 
