@@ -45,8 +45,7 @@ let primeraCarga = true;
 // ================================
 document.addEventListener("DOMContentLoaded", () => {
   cargarPedidos();
-  // 🔁 Refrescar periódicamente para detectar nuevos pedidos
-  setInterval(cargarPedidos, 10000); // cada 10 segundos
+  setInterval(cargarPedidos, 10000);
 });
 
 async function cargarPedidos() {
@@ -55,7 +54,6 @@ async function cargarPedidos() {
       showLoader("Cargando pedidos...");
     }
 
-    // 🔹 Obtener usuario logueado desde localStorage
     const usuarioLogin = JSON.parse(localStorage.getItem("usuario") || "null");
 
     if (!usuarioLogin || !usuarioLogin.correo) {
@@ -64,14 +62,12 @@ async function cargarPedidos() {
       return;
     }
 
-    // 🔹 Normalizar PuntoVenta del usuario
     const puntoVentaUsuario =
       usuarioLogin.PuntoVenta ||
       usuarioLogin.puntoventa ||
       usuarioLogin.puntoVenta ||
       null;
 
-    // 🔹 Consultar pedidos filtrados por correo (backend ya filtra por PuntoVenta)
     const resPedidos = await fetch(
       `/api/pedidos?correo=${encodeURIComponent(usuarioLogin.correo)}`
     );
@@ -85,7 +81,6 @@ async function cargarPedidos() {
 
     let pedidos = await resPedidos.json();
 
-    // 🔹 Por seguridad, filtrar también en el front si tenemos PuntoVenta
     if (puntoVentaUsuario) {
       pedidos = pedidos.filter((p) => {
         const pvPedido = p.PuntoVenta || p.puntoventa || p.puntoVenta;
@@ -93,25 +88,20 @@ async function cargarPedidos() {
       });
     }
 
-    // 🔹 Detectar nuevos pedidos (del local)
     detectarNuevosPedidos(pedidos);
 
-    // 🔹 Filtrado por estado
     const recibido = pedidos.filter((p) => p.estado === "Recibido");
     const preparacion = pedidos.filter(
       (p) => p.estado === "En preparación"
     );
     const listo = pedidos.filter((p) => p.estado === "Listo");
 
-    // 🔹 Renderizar columnas
     renderColumna("recibido", recibido);
     renderColumna("preparacion", preparacion);
     renderColumna("listo", listo);
 
-    // 🔹 Actualizar contadores en el header
     actualizarContadores(recibido.length, preparacion.length, listo.length);
 
-    // 🔹 Mostrar nombre del local en el header
     mostrarNombreLocal(usuarioLogin);
 
     hideLoader();
@@ -128,8 +118,7 @@ async function cargarPedidos() {
 // ================================
 function detectarNuevosPedidos(pedidos) {
   const idsActuales = new Set(pedidos.map((p) => p.id));
-
-  // En la primera carga no notifiquemos nada
+  
   if (ultimoIdsPedidos.size > 0) {
     const nuevos = pedidos.filter((p) => !ultimoIdsPedidos.has(p.id));
 
@@ -295,7 +284,6 @@ function crearTarjeta(p) {
 // ================================
 async function imprimirPedido(id) {
   try {
-    // Leer configuración de impresora
     let config = {};
     try {
       config = JSON.parse(localStorage.getItem("configImpresora") || "{}");
@@ -310,9 +298,9 @@ async function imprimirPedido(id) {
       return;
     }
 
-    const ip = config.nombre; // asumimos que guardaste la IP o hostname aquí
+    const ip = config.nombre; 
     const port =
-      config.puerto || config.port || 9100; // default típico para impresoras de red
+      config.puerto || config.port || 9100;
 
     showLoader("Enviando pedido a la impresora...");
 
