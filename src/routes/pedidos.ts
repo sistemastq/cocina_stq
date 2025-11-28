@@ -1,5 +1,7 @@
+// src/routes/pedidos.ts
 import { Router } from "express";
 import { supabase } from "../supabase";
+import { imprimirTextoEnIp } from "../printer";
 
 const router = Router();
 
@@ -11,15 +13,14 @@ const router = Router();
 */
 router.get("/", async (req, res) => {
   try {
-    const { correo } = req.query;
+    const { correo } = req.query as { correo?: string };
 
-    let puntoVenta = null;
+    let puntoVenta: string | null = null;
 
-    // 🔹 Si se envía correo, buscamos el PuntoVenta del usuario
     if (correo) {
       const { data: usuario, error: errorUsuario } = await supabase
         .from("usercocina")
-        .select("PuntoVenta")
+        .select("PuntoVenta") // 👈 aquí asumo que en usercocina SÍ se llama PuntoVenta
         .eq("correo", correo)
         .single();
 
@@ -32,15 +33,19 @@ router.get("/", async (req, res) => {
         return res.status(404).json({ error: "Usuario no encontrado" });
       }
 
-      puntoVenta = usuario.PuntoVenta;
+      // si en usercocina la columna fuera "puntoventa", sería: usuario.puntoventa
+      puntoVenta = (usuario as any).PuntoVenta;
     }
 
-    // 🔹 Consultar pedidos
-    let query = supabase.from("pedidos").select("*").order("id", { ascending: true });
+    let query = supabase
+      .from("pedidos")
+      .select("*")
+      .order("id", { ascending: true });
 
-    // 🔹 Filtrar por PuntoVenta si existe
+    // 🔴 AQUÍ ESTABA EL PROBLEMA:
+    // en la tabla pedidos la columna es "puntoventa" (todo minúsculas)
     if (puntoVenta) {
-      query = query.eq("PuntoVenta", puntoVenta);
+      query = query.eq("puntoventa", puntoVenta);
     }
 
     const { data, error } = await query;
@@ -51,7 +56,6 @@ router.get("/", async (req, res) => {
     }
 
     res.json(data);
-
   } catch (err) {
     console.error("Error general cargando pedidos:", err);
     res.status(500).json({ error: "Error general cargando pedidos" });
@@ -61,7 +65,6 @@ router.get("/", async (req, res) => {
 /*
  |------------------------------
  |  PUT /api/pedidos/estado
- |  (el frontend envía { id, estado })
  |------------------------------
 */
 router.put("/estado", async (req, res) => {
@@ -82,6 +85,57 @@ router.put("/estado", async (req, res) => {
   }
 
   res.json({ message: "Estado actualizado" });
+});
+
+/*
+ |------------------------------
+ |  POST /api/pedidos/imprimir
+ |  Body: { id, ip, port? }
+ |  Imprime el resumen_pedido del pedido indicado
+ |------------------------------
+*/
+router.post("/imprimir", async (req, res) => {
+  try {
+    const { id, ip, port } = req.body as {
+      id?: number;
+      ip?: string;
+      port?: number;
+    };
+
+    if (!id || !ip) {
+      return res
+        .status(400)
+        .json({ error: "Faltan datos: id del pedido e ip de la impresora" });
+    }
+
+    // 1. Buscar el pedido en Supabase
+    const { data: pedido, error } = await supabase
+      .from("pedidos")
+      .select("resumen_pedido")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      console.error("Error buscando pedido:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (!pedido) {
+      return res.status(404).json({ error: "Pedido no encontrado" });
+    }
+
+    const texto = (pedido as any).resumen_pedido as string;
+
+    // 2. Imprimir en la impresora POS
+    await imprimirTextoEnIp(ip, texto, port || 9100);
+
+    return res.json({ message: "Ticket enviado a la impresora" });
+  } catch (err) {
+    console.error("Error imprimiendo pedido:", err);
+    return res
+      .status(500)
+      .json({ error: "No se pudo imprimir el pedido en la impresora" });
+  }
 });
 
 export default router;

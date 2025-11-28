@@ -35,67 +35,139 @@ function cerrarModal() {
 }
 
 // ================================
+// 🔵 Estado global para nuevos pedidos
+// ================================
+let ultimoIdsPedidos = new Set();
+let primeraCarga = true;
+
+// ================================
 // 🔵 Cargar pedidos del backend
 // ================================
 document.addEventListener("DOMContentLoaded", () => {
   cargarPedidos();
+  // 🔁 Refrescar periódicamente para detectar nuevos pedidos
+  setInterval(cargarPedidos, 10000); // cada 10 segundos
 });
 
 async function cargarPedidos() {
   try {
-    showLoader("Cargando pedidos...");
+    if (primeraCarga) {
+      showLoader("Cargando pedidos...");
+    }
 
-    // 🔹 Obtener usuario logueado (solo correo y contraseña)
-    const usuarioLogin = JSON.parse(localStorage.getItem("usuario"));
+    // 🔹 Obtener usuario logueado desde localStorage
+    const usuarioLogin = JSON.parse(localStorage.getItem("usuario") || "null");
+
     if (!usuarioLogin || !usuarioLogin.correo) {
       hideLoader();
       showModal("No se ha iniciado sesión.");
       return;
     }
 
-    // 🔹 Consultar datos completos del usuario desde la base de datos
-    const resUsuario = await fetch(`/api/usuario?correo=${encodeURIComponent(usuarioLogin.correo)}`);
-    if (!resUsuario.ok) {
-      hideLoader();
-      showModal("Error al obtener información del usuario.");
-      return;
-    }
-    const usuario = await resUsuario.json(); // Debe traer {correo, contraseña, PuntoVenta, administrador}
+    // 🔹 Normalizar PuntoVenta del usuario
+    const puntoVentaUsuario =
+      usuarioLogin.PuntoVenta ||
+      usuarioLogin.puntoventa ||
+      usuarioLogin.puntoVenta ||
+      null;
 
-    // 🔹 Consultar todos los pedidos
-    const resPedidos = await fetch("/api/pedidos");
+    // 🔹 Consultar pedidos filtrados por correo (backend ya filtra por PuntoVenta)
+    const resPedidos = await fetch(
+      `/api/pedidos?correo=${encodeURIComponent(usuarioLogin.correo)}`
+    );
+
     if (!resPedidos.ok) {
       hideLoader();
       showModal("Error al cargar pedidos.");
-      console.error("Error al consultar /api/pedidos");
+      console.error("Error al consultar /api/pedidos:", resPedidos.status);
       return;
     }
+
     let pedidos = await resPedidos.json();
 
-    // 🔹 Filtrar por PuntoVenta del usuario
-    if (usuario && usuario.PuntoVenta) {
-      pedidos = pedidos.filter(p => p.PuntoVenta === usuario.PuntoVenta);
+    // 🔹 Por seguridad, filtrar también en el front si tenemos PuntoVenta
+    if (puntoVentaUsuario) {
+      pedidos = pedidos.filter((p) => {
+        const pvPedido = p.PuntoVenta || p.puntoventa || p.puntoVenta;
+        return pvPedido === puntoVentaUsuario;
+      });
     }
 
-    // 🔹 Filtrado por estado
-    const recibido = pedidos.filter(p => p.estado === "Recibido");
-    const preparacion = pedidos.filter(p => p.estado === "En preparación");
-    const listo = pedidos.filter(p => p.estado === "Listo");
+    // 🔹 Detectar nuevos pedidos (del local)
+    detectarNuevosPedidos(pedidos);
 
+    // 🔹 Filtrado por estado
+    const recibido = pedidos.filter((p) => p.estado === "Recibido");
+    const preparacion = pedidos.filter(
+      (p) => p.estado === "En preparación"
+    );
+    const listo = pedidos.filter((p) => p.estado === "Listo");
+
+    // 🔹 Renderizar columnas
     renderColumna("recibido", recibido);
     renderColumna("preparacion", preparacion);
     renderColumna("listo", listo);
 
-    // 🔹 Mostrar nombre del local
-    mostrarNombreLocal(usuario);
+    // 🔹 Actualizar contadores en el header
+    actualizarContadores(recibido.length, preparacion.length, listo.length);
+
+    // 🔹 Mostrar nombre del local en el header
+    mostrarNombreLocal(usuarioLogin);
 
     hideLoader();
-
+    primeraCarga = false;
   } catch (err) {
     hideLoader();
     showModal("No se pudo conectar al servidor.");
     console.error("Error conectando al backend:", err);
   }
+}
+
+// ================================
+// 🟠 Detectar nuevos pedidos y notificar
+// ================================
+function detectarNuevosPedidos(pedidos) {
+  const idsActuales = new Set(pedidos.map((p) => p.id));
+
+  // En la primera carga no notifiquemos nada
+  if (ultimoIdsPedidos.size > 0) {
+    const nuevos = pedidos.filter((p) => !ultimoIdsPedidos.has(p.id));
+
+    if (nuevos.length > 0) {
+      reproducirSonidoNuevoPedido();
+      const nums = nuevos.map((p) => `#${p.id}`).join(", ");
+      showModal(`¡Nuevo pedido recibido! (${nums})`);
+    }
+  }
+
+  ultimoIdsPedidos = idsActuales;
+}
+
+function reproducirSonidoNuevoPedido() {
+  const audio = document.getElementById("new-order-sound");
+  if (!audio) return;
+
+  try {
+    audio.currentTime = 0;
+    audio.play().catch((err) => {
+      console.warn("No se pudo reproducir el sonido de nuevo pedido:", err);
+    });
+  } catch (e) {
+    console.warn("Error reproduciendo sonido:", e);
+  }
+}
+
+// ================================
+// 🟠 Actualizar contadores en header
+// ================================
+function actualizarContadores(recibidoCount, prepCount, listoCount) {
+  const cRec = document.getElementById("count-recibido");
+  const cPrep = document.getElementById("count-preparacion");
+  const cLis = document.getElementById("count-listo");
+
+  if (cRec) cRec.textContent = recibidoCount;
+  if (cPrep) cPrep.textContent = prepCount;
+  if (cLis) cLis.textContent = listoCount;
 }
 
 // ================================
@@ -115,7 +187,7 @@ async function cambiarEstado(id, estado) {
 
     if (!res.ok) {
       showModal("Error al actualizar el estado.");
-      console.error("Error al actualizar estado");
+      console.error("Error al actualizar estado", res.status);
       return;
     }
 
@@ -132,31 +204,63 @@ async function cambiarEstado(id, estado) {
 // 🟢 Renderizar columna
 // ================================
 function renderColumna(id, pedidos) {
-  document.getElementById(id).innerHTML = pedidos
-    .map((p) => crearTarjeta(p))
-    .join("");
+  const cont = document.getElementById(id);
+  if (!cont) return;
+
+  if (!pedidos || pedidos.length === 0) {
+    cont.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-8 text-center text-xs text-slate-400 dark:text-slate-500">
+        <span class="material-symbols-outlined mb-1 text-lg">receipt_long</span>
+        <span>Sin pedidos en esta columna</span>
+      </div>
+    `;
+    return;
+  }
+
+  cont.innerHTML = pedidos.map((p) => crearTarjeta(p)).join("");
 }
 
 // ================================
 // 🟣 Crear tarjeta visual
 // ================================
 function crearTarjeta(p) {
+  const puntoVenta = p.PuntoVenta || p.puntoventa || p.puntoVenta || "";
+
   return `
-    <div class="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 mb-4">
+    <div class="bg-white/95 dark:bg-slate-800 rounded-xl shadow-sm border border-black/5 dark:border-white/10 p-3 sm:p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <h3 class="text-sm font-extrabold text-slate-900 dark:text-white">
+            Pedido #${p.id}
+          </h3>
+          ${
+            puntoVenta
+              ? `<p class="text-[11px] text-slate-500 dark:text-slate-400">Punto de venta: ${puntoVenta}</p>`
+              : ""
+          }
+        </div>
+        <span class="text-[11px] px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-200">
+          ${p.estado}
+        </span>
+      </div>
 
-      <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-2">
-        Pedido #${p.id}
-      </h3>
+      <pre class="recibo mb-3">${p.resumen_pedido}</pre>
 
-      <pre class="recibo">${p.resumen_pedido}</pre>
-
-      <div class="flex gap-2 mt-3 flex-wrap">
+      <div class="flex gap-2 flex-wrap justify-end">
+        <!-- Botón de imprimir SIEMPRE disponible -->
+        <button
+          onclick="imprimirPedido(${p.id})"
+          class="px-3 py-1.5 text-xs font-bold rounded-full bg-sky-600 text-white flex items-center gap-1"
+        >
+          <span class="material-symbols-outlined text-[16px]">print</span>
+          <span>Imprimir</span>
+        </button>
 
         ${
           p.estado !== "Recibido"
             ? `
           <button onclick="cambiarEstado(${p.id}, 'Recibido')"
-            class="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white p-2 rounded-lg font-bold">
+            class="px-3 py-1.5 text-xs font-bold rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-100">
             ← Volver
           </button>`
             : ""
@@ -166,8 +270,8 @@ function crearTarjeta(p) {
           p.estado === "Recibido"
             ? `
           <button onclick="cambiarEstado(${p.id}, 'En preparación')"
-            class="flex-1 bg-primary text-white p-2 rounded-lg font-bold">
-            Preparar → 
+            class="px-3 py-1.5 text-xs font-bold rounded-full bg-primary text-white">
+            Preparar →
           </button>`
             : ""
         }
@@ -176,52 +280,107 @@ function crearTarjeta(p) {
           p.estado === "En preparación"
             ? `
           <button onclick="cambiarEstado(${p.id}, 'Listo')"
-            class="flex-1 bg-green-600 text-white p-2 rounded-lg font-bold">
+            class="px-3 py-1.5 text-xs font-bold rounded-full bg-emerald-600 text-white">
             Marcar listo ✓
           </button>`
             : ""
         }
-
       </div>
     </div>
   `;
 }
 
 // ================================
-// 🔵 Mostrar nombre del local
+// 🖨 Imprimir pedido
 // ================================
-function mostrarNombreLocal(usuario) {
-  if (!usuario || !usuario.PuntoVenta) {
-    document.getElementById("tituloLocal").textContent = "Panel de Pedidos";
-    return;
+async function imprimirPedido(id) {
+  try {
+    // Leer configuración de impresora
+    let config = {};
+    try {
+      config = JSON.parse(localStorage.getItem("configImpresora") || "{}");
+    } catch (e) {
+      config = {};
+    }
+
+    if (!config.nombre) {
+      showModal(
+        "No hay una impresora configurada. Ve a 'Configurar impresora' en el menú."
+      );
+      return;
+    }
+
+    const ip = config.nombre; // asumimos que guardaste la IP o hostname aquí
+    const port =
+      config.puerto || config.port || 9100; // default típico para impresoras de red
+
+    showLoader("Enviando pedido a la impresora...");
+
+    const res = await fetch("/api/pedidos/imprimir", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, ip, port }),
+    });
+
+    hideLoader();
+
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (_) {
+      data = {};
+    }
+
+    if (!res.ok) {
+      console.error("Error al imprimir pedido:", data);
+      showModal(data.error || "No se pudo imprimir el pedido.");
+      return;
+    }
+
+    showModal(`Pedido #${id} enviado a la impresora.`);
+  } catch (err) {
+    hideLoader();
+    console.error("Error general imprimiendo pedido:", err);
+    showModal("Error inesperado al intentar imprimir el pedido.");
   }
-  document.getElementById("tituloLocal").textContent = `Panel de Pedidos – ${usuario.PuntoVenta}`;
 }
 
 // ================================
-// 🔴 Cerrar sesión (ARREGLADO)
+// 🔵 Mostrar nombre del local
+// ================================
+function mostrarNombreLocal(usuario) {
+  const titulo = document.getElementById("tituloLocal");
+  if (!titulo) return;
+
+  const puntoVenta =
+    usuario?.PuntoVenta || usuario?.puntoventa || usuario?.puntoVenta;
+
+  if (!puntoVenta) {
+    titulo.textContent = "Panel de Pedidos";
+    return;
+  }
+  titulo.textContent = `Panel de Pedidos – ${puntoVenta}`;
+}
+
+// ================================
+// 🔴 Cerrar sesión
 // ================================
 async function cerrarSesion() {
   try {
     showLoader("Cerrando sesión...");
 
-    // 🔥 Elimina la sesión del usuario
     localStorage.removeItem("usuario");
 
     hideLoader();
 
-    // Muestra modal de cierre
     showModal("Sesión cerrada correctamente.");
 
-    // Redirige después de 1.2s
     setTimeout(() => {
       window.location.href = "/login.html";
     }, 1200);
-
   } catch (err) {
     hideLoader();
     showModal("No se pudo cerrar la sesión.");
     console.error("Error cerrando sesión:", err);
   }
 }
-

@@ -428,3 +428,54 @@ h2 {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+/* ===== Detalles extra sólo para páginas de autenticación ===== */
+
+.page-login .auth-card {
+  position: relative;
+}
+
+.auth-title {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+  letter-spacing: 0.02em;
+}
+
+.auth-subtitle {
+  font-size: 0.9rem;
+  color: rgba(62, 39, 21, 0.8);
+  margin-bottom: 18px;
+}
+
+/* Mensajes de estado en el login */
+.msg-error {
+  color: #b41313;
+}
+
+.msg-success {
+  color: #0f7a33;
+}
+
+/* Modales especializados para feedback */
+.modal-loading .modal-content {
+  background: rgba(15, 10, 6, 0.95);
+  color: #fff;
+  border-color: transparent;
+}
+
+.modal-success .modal-content {
+  background: #e7ffe9;
+  border-color: #0f7a33;
+}
+
+.modal-error .modal-content {
+  background: #ffe7e5;
+  border-color: #b41313;
+}
+
+.modal-success h3 {
+  color: #0f7a33;
+}
+
+.modal-error h3 {
+  color: #b41313;
+}
