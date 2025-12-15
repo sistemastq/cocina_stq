@@ -7,33 +7,32 @@ const express_1 = require("express");
 const supabase_1 = require("../supabase");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const router = (0, express_1.Router)();
-/* ===============================
-     REGISTRO DE USUARIO
-================================ */
+//REGISTRO DE USUARIO
 router.post("/register", async (req, res) => {
-    const { nombre, correo, password } = req.body;
-    if (!nombre || !correo || !password) {
+    console.log("REQ BODY:", req.body);
+    const { administrador, correo, password, puntoVenta } = req.body;
+    if (!administrador || !correo || !password || !puntoVenta) {
         return res.status(400).json({ error: "Faltan datos" });
     }
     try {
-        // Verificar si el usuario ya existe
-        const { data: existe } = await supabase_1.supabase
+        // Verificar si ya existe correo
+        const { data: existeCorreo } = await supabase_1.supabase
             .from("usercocina")
             .select("*")
             .eq("correo", correo)
             .single();
-        if (existe) {
+        if (existeCorreo) {
             return res.status(400).json({ error: "Este correo ya está registrado" });
         }
-        // Encriptar contraseña
+        // Encriptar la contraseña
         const hashed = await bcrypt_1.default.hash(password, 10);
-        // Insertar usuario en Supabase
-        const { error } = await supabase_1.supabase.from("usuarios").insert([
+        // Insertar usuario
+        const { error } = await supabase_1.supabase.from("usercocina").insert([
             {
-                nombre,
+                administrador,
                 correo,
-                password: hashed,
-                fecha_registro: new Date(),
+                contraseña: hashed,
+                PuntoVenta: puntoVenta,
             },
         ]);
         if (error)
@@ -44,18 +43,16 @@ router.post("/register", async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 });
-/* ===============================
-        LOGIN
-================================ */
+//LOGIN
 router.post("/login", async (req, res) => {
     const { correo, password } = req.body;
     if (!correo || !password) {
         return res.status(400).json({ error: "Correo y contraseña requeridos" });
     }
     try {
-        // Buscar al usuario
+        // Buscar usuario
         const { data: usuario, error } = await supabase_1.supabase
-            .from("usuarios")
+            .from("usercocina")
             .select("*")
             .eq("correo", correo)
             .single();
@@ -63,7 +60,7 @@ router.post("/login", async (req, res) => {
             return res.status(400).json({ error: "Usuario no encontrado" });
         }
         // Comparar contraseña
-        const esCorrecta = await bcrypt_1.default.compare(password, usuario.password);
+        const esCorrecta = await bcrypt_1.default.compare(password, usuario.contraseña);
         if (!esCorrecta) {
             return res.status(401).json({ error: "Contraseña incorrecta" });
         }
@@ -71,8 +68,9 @@ router.post("/login", async (req, res) => {
             mensaje: "Inicio de sesión exitoso",
             usuario: {
                 id: usuario.id,
-                nombre: usuario.nombre,
+                administrador: usuario.administrador,
                 correo: usuario.correo,
+                puntoVenta: usuario.PuntoVenta,
             },
         });
     }

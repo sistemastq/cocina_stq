@@ -3,17 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = __importDefault(require("express"));
-const auth_1 = __importDefault(require("./routes/auth"));
-const cors_1 = __importDefault(require("cors"));
-const app = (0, express_1.default)();
-app.use((0, cors_1.default)());
-app.use(express_1.default.json());
-app.use(express_1.default.static("public"));
-app.use("/auth", auth_1.default);
-app.get("/", (req, res) => {
-    res.send("API funcionando");
-});
-app.listen(3000, () => {
-    console.log("Servidor corriendo en http://localhost:3000");
-});
+// src/index.ts
+const express_1 = require("express");
+// Importa aquí todas las rutas que quieras agrupar
+const pedidos_1 = __importDefault(require("./routes/pedidos"));
+const router = (0, express_1.Router)();
+// Agrupa tus rutas API
+router.use("/pedidos", pedidos_1.default);
+exports.default = router;

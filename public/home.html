@@ -49,22 +49,23 @@
         font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
       }
 
-      .recibo {
-        max-height: 220px;
-        overflow-y: auto;
+      /* Preview compacto */
+      .recibo-preview {
+        max-height: 74px;
+        overflow: hidden;
         white-space: pre-wrap;
         background: #f9fafb;
         border: 1px dashed rgba(148, 163, 184, 0.7);
-        padding: 12px;
-        font-size: 0.9rem;
+        padding: 8px;
+        font-size: 0.78rem;
         border-radius: 0.75rem;
+        line-height: 1.15rem;
       }
 
       /* ====== LOADER ====== */
       #loader.hidden {
         display: none;
       }
-
       #loader {
         position: fixed;
         inset: 0;
@@ -76,7 +77,6 @@
         z-index: 9999;
         backdrop-filter: blur(3px);
       }
-
       .spinner {
         width: 55px;
         height: 55px;
@@ -85,7 +85,6 @@
         border-top-color: #ec1313;
         animation: spin 1s linear infinite;
       }
-
       @keyframes spin {
         to {
           transform: rotate(360deg);
@@ -96,7 +95,6 @@
       #modal.hidden {
         display: none;
       }
-
       #modal {
         position: fixed;
         inset: 0;
@@ -107,15 +105,44 @@
         z-index: 9998;
         backdrop-filter: blur(3px);
       }
-
       .modal-box {
         background: white;
-        padding: 25px;
+        padding: 22px;
         border-radius: 16px;
-        width: 90%;
-        max-width: 380px;
+        width: 92%;
+        max-width: 420px;
         text-align: center;
         box-shadow: 0 20px 50px rgba(15, 23, 42, 0.45);
+      }
+
+      /* ====== MODAL DEMORA ====== */
+      #modalDemora.hidden {
+        display: none;
+      }
+      #modalDemora {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9997;
+        backdrop-filter: blur(3px);
+      }
+
+      /* ====== MODAL EDITAR PEDIDO ====== */
+      #modalPedido.hidden {
+        display: none;
+      }
+      #modalPedido {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9996;
+        backdrop-filter: blur(3px);
       }
     </style>
   </head>
@@ -161,12 +188,26 @@
 
           <button
             class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-white/70 dark:hover:bg-white/10 text-slate-800 dark:text-slate-100 font-semibold transition-colors"
-            onclick="abrirConfigImpresora()"
+            onclick="irImpresoras()"
           >
-            <span class="material-symbols-outlined text-slate-600 dark:text-slate-300">
+            <span
+              class="material-symbols-outlined text-slate-600 dark:text-slate-300"
+            >
               print
             </span>
-            <span>Configurar impresora</span>
+            <span>Impresoras</span>
+          </button>
+
+          <button
+            class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-white/70 dark:hover:bg-white/10 text-slate-800 dark:text-slate-100 font-semibold transition-colors"
+            onclick="irHistorico()"
+          >
+            <span
+              class="material-symbols-outlined text-slate-600 dark:text-slate-300"
+            >
+              history
+            </span>
+            <span>Histórico</span>
           </button>
 
           <div class="mt-4 border-t border-black/5 dark:border-white/10 pt-3">
@@ -178,9 +219,9 @@
                 <span class="material-symbols-outlined"> logout </span>
                 <span>Cerrar sesión</span>
               </span>
-              <span class="material-symbols-outlined text-sm">
-                arrow_forward
-              </span>
+              <span class="material-symbols-outlined text-sm"
+                >arrow_forward</span
+              >
             </button>
           </div>
         </nav>
@@ -204,8 +245,10 @@
           >
             <span class="material-symbols-outlined text-2xl">menu</span>
           </button>
+
           <div class="hidden sm:flex flex-col">
-            <span class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400"
+            <span
+              class="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400"
               >Panel de cocina</span
             >
             <span
@@ -217,25 +260,23 @@
         </div>
 
         <div class="flex items-center gap-3">
-          <!-- Texto impresora -->
           <span
             id="impresora-actual"
             class="hidden text-[11px] sm:text-xs px-2 py-1 rounded-full bg-white/80 dark:bg-black/40 text-slate-700 dark:text-slate-200 border border-black/5 dark:border-white/10 max-w-[150px] sm:max-w-xs truncate"
           ></span>
 
-          <!-- Botón usuario -->
           <button
             class="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 dark:bg-black/30 shadow-sm text-slate-900 dark:text-white"
             onclick="abrirPerfil()"
           >
-            <span class="material-symbols-outlined text-2xl">
-              account_circle
-            </span>
+            <span class="material-symbols-outlined text-2xl"
+              >account_circle</span
+            >
           </button>
         </div>
       </header>
 
-      <!-- ===== SUBHEADER (estado general) ===== -->
+      <!-- ===== SUBHEADER ===== -->
       <section
         class="px-4 pt-3 pb-1 border-b border-black/5 dark:border-white/10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-sm"
       >
@@ -244,25 +285,25 @@
             class="inline-flex items-center gap-2 rounded-full bg-white/90 dark:bg-black/30 px-3 py-1 shadow-sm"
           >
             <span class="h-2 w-2 rounded-full bg-yellow-400"></span>
-            <span class="font-semibold text-slate-700 dark:text-slate-100">
-              Recibido
-            </span>
+            <span class="font-semibold text-slate-700 dark:text-slate-100"
+              >Recibido</span
+            >
           </div>
           <div
             class="inline-flex items-center gap-2 rounded-full bg-white/90 dark:bg-black/30 px-3 py-1 shadow-sm"
           >
             <span class="h-2 w-2 rounded-full bg-orange-500"></span>
-            <span class="font-semibold text-slate-700 dark:text-slate-100">
-              En preparación
-            </span>
+            <span class="font-semibold text-slate-700 dark:text-slate-100"
+              >En preparación</span
+            >
           </div>
           <div
             class="inline-flex items-center gap-2 rounded-full bg-white/90 dark:bg-black/30 px-3 py-1 shadow-sm"
           >
             <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
-            <span class="font-semibold text-slate-700 dark:text-slate-100">
-              Listo
-            </span>
+            <span class="font-semibold text-slate-700 dark:text-slate-100"
+              >Listo</span
+            >
           </div>
         </div>
       </section>
@@ -270,7 +311,7 @@
       <!-- ===== CONTENIDO ===== -->
       <main class="flex-1 pb-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 xl:gap-6 p-4">
-          <!-- Columna Recibido -->
+          <!-- Recibido -->
           <section
             class="flex flex-col rounded-2xl bg-white/95 dark:bg-zinc-900/95 shadow-sm border border-black/5 dark:border-white/10 min-h-[260px]"
           >
@@ -289,23 +330,22 @@
                     <span
                       id="count-recibido"
                       class="inline-flex items-center justify-center min-w-[1.5rem] h-6 rounded-full bg-yellow-100 text-[11px] font-bold text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200 px-2"
+                      >0</span
                     >
-                      0
-                    </span>
                   </div>
                   <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                    Pedidos nuevos a la espera de preparación
+                    Pedidos nuevos
                   </p>
                 </div>
               </div>
             </header>
             <div
               id="recibido"
-              class="flex-1 p-3 sm:p-4 space-y-3 overflow-y-auto"
+              class="flex-1 p-3 sm:p-4 space-y-2 overflow-y-auto"
             ></div>
           </section>
 
-          <!-- Columna En preparación -->
+          <!-- En preparación -->
           <section
             class="flex flex-col rounded-2xl bg-white/95 dark:bg-zinc-900/95 shadow-sm border border-black/5 dark:border-white/10 min-h-[260px]"
           >
@@ -324,23 +364,22 @@
                     <span
                       id="count-preparacion"
                       class="inline-flex items-center justify-center min-w-[1.5rem] h-6 rounded-full bg-orange-100 text-[11px] font-bold text-orange-800 dark:bg-orange-500/20 dark:text-orange-200 px-2"
+                      >0</span
                     >
-                      0
-                    </span>
                   </div>
                   <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                    Pedidos actualmente en cocina
+                    Pedidos en cocina
                   </p>
                 </div>
               </div>
             </header>
             <div
               id="preparacion"
-              class="flex-1 p-3 sm:p-4 space-y-3 overflow-y-auto"
+              class="flex-1 p-3 sm:p-4 space-y-2 overflow-y-auto"
             ></div>
           </section>
 
-          <!-- Columna Listo -->
+          <!-- Listo -->
           <section
             class="flex flex-col rounded-2xl bg-white/95 dark:bg-zinc-900/95 shadow-sm border border-black/5 dark:border-white/10 min-h-[260px]"
           >
@@ -359,43 +398,37 @@
                     <span
                       id="count-listo"
                       class="inline-flex items-center justify-center min-w-[1.5rem] h-6 rounded-full bg-emerald-100 text-[11px] font-bold text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200 px-2"
+                      >0</span
                     >
-                      0
-                    </span>
                   </div>
                   <p class="text-[11px] text-slate-500 dark:text-slate-400">
-                    Pedidos finalizados y listos para entregar
+                    Listos (saldrán a histórico en 5 min)
                   </p>
                 </div>
               </div>
             </header>
             <div
               id="listo"
-              class="flex-1 p-3 sm:p-4 space-y-3 overflow-y-auto"
+              class="flex-1 p-3 sm:p-4 space-y-2 overflow-y-auto"
             ></div>
           </section>
         </div>
       </main>
     </div>
 
-    <!-- JS principal de la página (carga pedidos, etc.) -->
+    <!-- JS principal -->
     <script src="/js/home.js"></script>
 
-    <!-- Script inline: menú, impresora, perfil (lógica original) -->
+    <!-- Script inline: sidebar, navegación, header impresora, perfil -->
     <script>
-      // ====== SIDEBAR ======
       function toggleSidebar() {
         var sidebar = document.getElementById("sidebar");
         var backdrop = document.getElementById("sidebar-backdrop");
-
         var isHidden = sidebar.classList.contains("-translate-x-full");
-
         if (isHidden) {
-          // Abrir
           sidebar.classList.remove("-translate-x-full");
           if (backdrop) backdrop.classList.remove("hidden");
         } else {
-          // Cerrar
           sidebar.classList.add("-translate-x-full");
           if (backdrop) backdrop.classList.add("hidden");
         }
@@ -404,8 +437,13 @@
       function irHome() {
         window.location.href = "/home.html";
       }
+      function irImpresoras() {
+        window.location.href = "/impresoras.html";
+      }
+      function irHistorico() {
+        window.location.href = "/historico.html";
+      }
 
-      // ====== IMPRESORA EN HEADER ======
       function actualizarTextoImpresoraActual() {
         var span = document.getElementById("impresora-actual");
         if (!span) return;
@@ -417,67 +455,18 @@
           config = {};
         }
 
-        if (config.nombre) {
-          span.textContent = "Impresora: " + config.nombre;
+        if (config && config.nombre) {
+          span.textContent =
+            "Impresora: " +
+            config.nombre +
+            ":" +
+            (config.puerto || config.port || 9100);
         } else {
           span.textContent = "Impresora no configurada";
         }
         span.classList.remove("hidden");
       }
 
-      // ====== CONFIG IMPRESORA ======
-      function abrirConfigImpresora() {
-        var modal = document.getElementById("modalImpresora");
-        if (!modal) {
-          console.error("No existe #modalImpresora");
-          return;
-        }
-
-        var guardado = {};
-        try {
-          guardado = JSON.parse(
-            localStorage.getItem("configImpresora") || "{}"
-          );
-        } catch (e) {
-          guardado = {};
-        }
-
-        var inputNombre = document.getElementById("impresoraNombre");
-        var inputAncho = document.getElementById("impresoraAncho");
-
-        if (inputNombre) inputNombre.value = guardado.nombre || "";
-        if (inputAncho) inputAncho.value = guardado.ancho || 80;
-
-        modal.classList.remove("hidden");
-      }
-
-      function cerrarConfigImpresora() {
-        var modal = document.getElementById("modalImpresora");
-        if (!modal) return;
-        modal.classList.add("hidden");
-      }
-
-      function guardarConfigImpresora() {
-        var inputNombre = document.getElementById("impresoraNombre");
-        var inputAncho = document.getElementById("impresoraAncho");
-
-        var nombre = inputNombre ? inputNombre.value.trim() : "";
-        var ancho = inputAncho ? parseInt(inputAncho.value, 10) || 80 : 80;
-
-        var config = { nombre: nombre, ancho: ancho };
-        localStorage.setItem("configImpresora", JSON.stringify(config));
-
-        actualizarTextoImpresoraActual();
-        cerrarConfigImpresora();
-
-        if (typeof showModal === "function") {
-          showModal("Configuración de impresora guardada correctamente.");
-        } else {
-          alert("Configuración de impresora guardada correctamente.");
-        }
-      }
-
-      // ====== PERFIL (SOLO MODAL, CAMBIO DE NOMBRE Y CONTRASEÑA) ======
       function abrirPerfil() {
         var modal = document.getElementById("modalPerfil");
         var correoInput = document.getElementById("perfilCorreo");
@@ -485,10 +474,7 @@
         var passInput = document.getElementById("perfilPassword");
         var pass2Input = document.getElementById("perfilPassword2");
 
-        if (!modal) {
-          console.error("No existe #modalPerfil");
-          return;
-        }
+        if (!modal) return;
 
         var usuarioLogin = null;
         try {
@@ -498,11 +484,9 @@
         }
 
         if (!usuarioLogin || !usuarioLogin.correo) {
-          if (typeof showModal === "function") {
+          if (typeof showModal === "function")
             showModal("No se ha iniciado sesión.");
-          } else {
-            alert("No se ha iniciado sesión.");
-          }
+          else alert("No se ha iniciado sesión.");
           return;
         }
 
@@ -510,7 +494,6 @@
         if (nombreInput) nombreInput.value = "";
         if (passInput) passInput.value = "";
         if (pass2Input) pass2Input.value = "";
-
         modal.classList.remove("hidden");
       }
 
@@ -532,62 +515,48 @@
         var password2 = pass2Input ? pass2Input.value : "";
 
         if (!correo) {
-          if (typeof showModal === "function") {
-            showModal("Correo inválido.");
-          } else {
-            alert("Correo inválido.");
-          }
+          if (typeof showModal === "function") showModal("Correo inválido.");
+          else alert("Correo inválido.");
           return;
         }
-
         if (!nombre) {
-          if (typeof showModal === "function") {
+          if (typeof showModal === "function")
             showModal("El nombre no puede estar vacío.");
-          } else {
-            alert("El nombre no puede estar vacío.");
-          }
+          else alert("El nombre no puede estar vacío.");
           return;
         }
-
         if (password || password2) {
           if (password !== password2) {
-            if (typeof showModal === "function") {
+            if (typeof showModal === "function")
               showModal("Las contraseñas no coinciden.");
-            } else {
-              alert("Las contraseñas no coinciden.");
-            }
+            else alert("Las contraseñas no coinciden.");
             return;
           }
         }
 
         console.log("Guardar perfil:", {
-          correo: correo,
-          nombre: nombre,
+          correo,
+          nombre,
           contraseña: password || "(sin cambiar)",
         });
-
-        if (typeof showModal === "function") {
+        if (typeof showModal === "function")
           showModal("Perfil actualizado (simulado).");
-        } else {
-          alert("Perfil actualizado (simulado).");
-        }
-
+        else alert("Perfil actualizado (simulado).");
         cerrarPerfil();
       }
 
-      // ====== AL CARGAR LA PÁGINA ======
       document.addEventListener("DOMContentLoaded", function () {
         actualizarTextoImpresoraActual();
       });
     </script>
 
-    <!-- 🔵 LOADER GLOBAL (Siendo usado por home.js) -->
+    <!-- 🔵 LOADER -->
     <div id="loader" class="hidden">
       <div class="spinner"></div>
       <p class="text-white font-bold mt-4 text-lg">Cargando...</p>
     </div>
 
-    <!-- 🔵 MODAL GLOBAL (Siendo usado por home.js) -->
+    <!-- 🔵 MODAL GLOBAL -->
     <div id="modal" class="hidden">
       <div class="modal-box">
         <p id="modal-text" class="text-slate-800 text-lg font-bold mb-4">
@@ -602,60 +571,142 @@
       </div>
     </div>
 
-    <!-- 🔵 MODAL CONFIGURAR IMPRESORA -->
-    <div
-      id="modalImpresora"
-      class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
-    >
-      <div
-        class="bg-white dark:bg-slate-800 rounded-2xl p-5 w-full max-w-md shadow-2xl border border-black/5 dark:border-white/10"
-      >
-        <h2 class="text-lg font-bold text-slate-800 dark:text-white">
-          Configurar impresora
-        </h2>
-
-        <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
-          Esta configuración se guarda en este navegador.
+    <!-- ⚠️ MODAL DEMORA -->
+    <div id="modalDemora" class="hidden" onclick="cerrarModalDemora()">
+      <div class="modal-box" onclick="event.stopPropagation()">
+        <p id="demoraTitulo" class="text-slate-900 text-lg font-extrabold mb-2">
+          Pedido
         </p>
 
-        <div class="mt-4 space-y-3">
-          <label
-            class="block text-sm font-medium text-slate-700 dark:text-slate-200"
+        <div class="text-left text-sm text-slate-700 space-y-1 mb-4">
+          <p><b>Cliente:</b> <span id="demoraCliente">—</span></p>
+          <p><b>Celular:</b> <span id="demoraCelular">—</span></p>
+          <p><b>Dirección:</b> <span id="demoraDireccion">—</span></p>
+          <p><b>Estado:</b> <span id="demoraEstado">—</span></p>
+          <p><b>Tiempo:</b> <span id="demoraTiempo">—</span></p>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            onclick="posponerDemora()"
+            class="w-1/2 px-4 py-2 rounded-lg font-bold border border-slate-300 text-slate-700"
           >
-            Nombre / IP de la impresora
-            <input
-              id="impresoraNombre"
-              type="text"
-              class="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Ej: EPSON_TM80 ó 192.168.1.50"
-            />
-          </label>
+            Posponer
+          </button>
+          <button
+            onclick="marcarDemoraComoAvisada()"
+            class="w-1/2 px-4 py-2 rounded-lg font-bold bg-primary text-white"
+          >
+            Avisado
+          </button>
+        </div>
+
+        <button
+          onclick="cerrarModalDemora()"
+          class="mt-3 w-full px-4 py-2 rounded-lg font-bold bg-slate-100 text-slate-700"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+
+    <!-- 🧾 MODAL DETALLE PEDIDO -->
+    <div
+      id="modalDetalle"
+      class="hidden fixed inset-0 bg-black/55 backdrop-blur-sm z-[9999] flex items-center justify-center px-3"
+    >
+      <div
+        class="bg-white dark:bg-slate-800 rounded-2xl w-full max-w-xl shadow-2xl border border-black/5 dark:border-white/10 overflow-hidden"
+      >
+        <div
+          class="flex items-center justify-between px-4 py-3 border-b border-black/5 dark:border-white/10"
+        >
+          <div>
+            <p
+              id="detalleTitulo"
+              class="text-sm font-extrabold text-slate-900 dark:text-white"
+            >
+              Pedido
+            </p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-300">
+              Estado: <span id="detalleEstado">—</span>
+            </p>
+          </div>
+
+          <button
+            onclick="cerrarDetallePedido()"
+            class="h-9 w-9 rounded-full bg-slate-100 dark:bg-black/30 text-slate-700 dark:text-slate-100 flex items-center justify-center"
+            title="Cerrar"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div class="p-4 space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            <div
+              class="rounded-xl bg-slate-50 dark:bg-black/20 border border-black/5 dark:border-white/10 p-3"
+            >
+              <p class="text-slate-500 dark:text-slate-300">Cliente</p>
+              <p
+                id="detalleCliente"
+                class="font-extrabold text-slate-900 dark:text-white"
+              >
+                —
+              </p>
+            </div>
+            <div
+              class="rounded-xl bg-slate-50 dark:bg-black/20 border border-black/5 dark:border-white/10 p-3"
+            >
+              <p class="text-slate-500 dark:text-slate-300">Celular</p>
+              <p
+                id="detalleCelular"
+                class="font-extrabold text-slate-900 dark:text-white"
+              >
+                —
+              </p>
+            </div>
+            <div
+              class="rounded-xl bg-slate-50 dark:bg-black/20 border border-black/5 dark:border-white/10 p-3"
+            >
+              <p class="text-slate-500 dark:text-slate-300">Dirección</p>
+              <p
+                id="detalleDireccion"
+                class="font-extrabold text-slate-900 dark:text-white"
+              >
+                —
+              </p>
+            </div>
+          </div>
 
           <label
-            class="block text-sm font-medium text-slate-700 dark:text-slate-200"
+            class="block text-sm font-bold text-slate-700 dark:text-slate-200"
           >
-            Ancho del papel (mm)
-            <input
-              id="impresoraAncho"
-              type="number"
-              class="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="80"
-            />
+            Detalle del pedido (editable)
+            <textarea
+              id="detalleTexto"
+              rows="10"
+              class="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Aquí aparece el resumen del pedido..."
+            ></textarea>
           </label>
         </div>
 
-        <div class="mt-5 flex justify-end gap-2">
+        <div
+          class="px-4 py-3 border-t border-black/5 dark:border-white/10 flex justify-end gap-2"
+        >
           <button
-            type="button"
-            onclick="cerrarConfigImpresora()"
-            class="px-4 py-2 rounded-xl text-sm font-bold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
+            id="btnCancelarDetalle"
+            onclick="cancelarCambiosDetalle()"
+            class="px-4 py-2 rounded-xl text-sm font-extrabold border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200"
           >
-            Cancelar
+            Cancelar cambios
           </button>
+
           <button
-            type="button"
-            onclick="guardarConfigImpresora()"
-            class="px-4 py-2 rounded-xl text-sm font-bold bg-primary text-white shadow-sm"
+            id="btnGuardarDetalle"
+            onclick="guardarDetallePedido()"
+            class="px-4 py-2 rounded-xl text-sm font-extrabold bg-primary text-white shadow-sm"
           >
             Guardar
           </button>
@@ -663,7 +714,7 @@
       </div>
     </div>
 
-    <!-- 🔵 MODAL PERFIL DE USUARIO -->
+    <!-- 🔵 MODAL PERFIL -->
     <div
       id="modalPerfil"
       class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
@@ -674,7 +725,6 @@
         <h2 class="text-lg font-bold text-slate-800 dark:text-white">
           Perfil de usuario
         </h2>
-
         <p class="text-sm text-slate-600 dark:text-slate-300 mt-1">
           Cambia tu nombre y, opcionalmente, tu contraseña.
         </p>
@@ -748,10 +798,10 @@
       </div>
     </div>
 
-    <!-- 🔊 SONIDO DE NUEVO PEDIDO -->
+    <!-- 🔊 SONIDO -->
     <audio
       id="new-order-sound"
-      src="/sounds/notificacion.mp3"
+      src="./sounds/notificacion.mp3"
       preload="auto"
     ></audio>
   </body>
