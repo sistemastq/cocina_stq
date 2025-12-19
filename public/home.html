@@ -805,4 +805,51 @@
       preload="auto"
     ></audio>
   </body>
+  <!-- ✅ FOOTER SOPORTE (llamativo, no invasivo) -->
+  <footer
+  class="mt-6 border-t border-black/5 dark:border-white/10 bg-white/70 dark:bg-black/20 backdrop-blur px-4 py-4"
+>
+  <div class="mx-auto max-w-6xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div class="flex items-start gap-3">
+      <span class="material-symbols-outlined text-primary text-[22px]">support_agent</span>
+      <div>
+        <p class="text-sm font-extrabold text-slate-900 dark:text-white">
+          Soporte del local
+        </p>
+        <p class="text-xs text-slate-600 dark:text-slate-300">
+          Impresoras, errores de pedidos o fallas de la app.
+          <span class="font-semibold">Correo:</span>
+          <span class="font-mono">ingenierosistemas@tierraquerida.com.co</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2">
+      <button
+        onclick="contactarSoporteGmail('Impresoras')"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-extrabold bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-white/10"
+      >
+        <span class="material-symbols-outlined text-[18px]">print</span>
+        Impresoras
+      </button>
+
+      <button
+        onclick="contactarSoporteGmail('Pedidos')"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-extrabold bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-white/10"
+      >
+        <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+        Pedidos
+      </button>
+
+      <button
+        onclick="contactarSoporteGmail('App')"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-extrabold bg-primary text-white shadow-sm hover:brightness-95"
+      >
+        <span class="material-symbols-outlined text-[18px]">mail</span>
+        Contactar en Gmail
+      </button>
+    </div>
+  </div>
+</footer>
+
 </html>
