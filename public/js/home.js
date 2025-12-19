@@ -85,8 +85,13 @@ function marcarDemoraComoAvisada() {
   if (!demoraAbierta) return cerrarModalDemora();
 
   try {
-    localStorage.setItem(keyAvisado(demoraAbierta.id, demoraAbierta.estado), "1");
-    localStorage.removeItem(keyPosponer(demoraAbierta.id, demoraAbierta.estado));
+    localStorage.setItem(
+      keyAvisado(demoraAbierta.id, demoraAbierta.estado),
+      "1"
+    );
+    localStorage.removeItem(
+      keyPosponer(demoraAbierta.id, demoraAbierta.estado)
+    );
   } catch (_) {}
 
   const id = demoraAbierta.id;
@@ -99,7 +104,10 @@ function posponerDemora() {
 
   const until = Date.now() + POSPONER_MS;
   try {
-    localStorage.setItem(keyPosponer(demoraAbierta.id, demoraAbierta.estado), String(until));
+    localStorage.setItem(
+      keyPosponer(demoraAbierta.id, demoraAbierta.estado),
+      String(until)
+    );
   } catch (_) {}
 
   cerrarModalDemora();
@@ -129,7 +137,9 @@ function showHistoricoEn5MinModal(p) {
     localStorage.setItem(k, "1");
   } catch (_) {}
 
-  showModal(`Pedido #${p.id} está en "Listo" y pasará al histórico en 5 minutos.`);
+  showModal(
+    `Pedido #${p.id} está en "Listo" y pasará al histórico en 5 minutos.`
+  );
 }
 
 function esHistorico(p) {
@@ -156,12 +166,7 @@ function getUsuarioNombre() {
     u = null;
   }
   const nombre =
-    u?.nombre ||
-    u?.Nombre ||
-    u?.name ||
-    u?.usuario ||
-    u?.displayName ||
-    "";
+    u?.nombre || u?.Nombre || u?.name || u?.usuario || u?.displayName || "";
   return (nombre || "").toString().trim() || "Usuario";
 }
 
@@ -281,49 +286,49 @@ function calcDuraciones(p) {
 
   const est = p.estado || "Recibido";
 
-  const tRec =
-    recibido
-      ? (prep
-          ? prep.getTime() - recibido.getTime()
-          : est === "Recibido"
-          ? now.getTime() - recibido.getTime()
-          : null)
-      : null;
+  const tRec = recibido
+    ? prep
+      ? prep.getTime() - recibido.getTime()
+      : est === "Recibido"
+      ? now.getTime() - recibido.getTime()
+      : null
+    : null;
 
-  const tPrep =
-    prep
-      ? (listo
-          ? listo.getTime() - prep.getTime()
-          : est === "En preparación"
-          ? now.getTime() - prep.getTime()
-          : null)
-      : null;
+  const tPrep = prep
+    ? listo
+      ? listo.getTime() - prep.getTime()
+      : est === "En preparación"
+      ? now.getTime() - prep.getTime()
+      : null
+    : null;
 
   const finListo = camino || entregado;
-  const tListo =
-    listo
-      ? (finListo
-          ? finListo.getTime() - listo.getTime()
-          : est === "Listo"
-          ? now.getTime() - listo.getTime()
-          : null)
-      : null;
+  const tListo = listo
+    ? finListo
+      ? finListo.getTime() - listo.getTime()
+      : est === "Listo"
+      ? now.getTime() - listo.getTime()
+      : null
+    : null;
 
-  const tCamino =
-    camino
-      ? (entregado
-          ? entregado.getTime() - camino.getTime()
-          : est === "En camino"
-          ? now.getTime() - camino.getTime()
-          : null)
-      : null;
+  const tCamino = camino
+    ? entregado
+      ? entregado.getTime() - camino.getTime()
+      : est === "En camino"
+      ? now.getTime() - camino.getTime()
+      : null
+    : null;
 
   const inicioTotal = recibido || created;
   const finTotal = entregado || now;
-  const tTotal = inicioTotal ? finTotal.getTime() - inicioTotal.getTime() : null;
+  const tTotal = inicioTotal
+    ? finTotal.getTime() - inicioTotal.getTime()
+    : null;
 
   const startEstado = getEstadoStart(p);
-  const tEstadoActual = startEstado ? now.getTime() - startEstado.getTime() : null;
+  const tEstadoActual = startEstado
+    ? now.getTime() - startEstado.getTime()
+    : null;
 
   return { tRec, tPrep, tListo, tCamino, tTotal, tEstadoActual };
 }
@@ -390,7 +395,9 @@ async function cargarPedidos() {
     detectarNuevosPedidos(pedidos);
 
     const recibido = pedidos.filter((p) => (p.estado || "") === "Recibido");
-    const preparacion = pedidos.filter((p) => (p.estado || "") === "En preparación");
+    const preparacion = pedidos.filter(
+      (p) => (p.estado || "") === "En preparación"
+    );
 
     // HOME: mostrar Listo SOLO si NO es histórico (Listo < 5 min)
     const listoPanel = pedidos.filter((p) => {
@@ -405,7 +412,11 @@ async function cargarPedidos() {
     renderColumna("preparacion", preparacion);
     renderColumna("listo", listoPanel);
 
-    actualizarContadores(recibido.length, preparacion.length, listoPanel.length);
+    actualizarContadores(
+      recibido.length,
+      preparacion.length,
+      listoPanel.length
+    );
     mostrarNombreLocal(usuarioLogin);
 
     checkDemoras();
@@ -474,7 +485,9 @@ async function cambiarEstado(id, estado) {
 
     // Regla: si ya está Listo, no permitir devolverse
     if (estActual === "Listo" && estado !== "Listo") {
-      showModal(`No puedes cambiar el Pedido #${id} porque ya está en "Listo".`);
+      showModal(
+        `No puedes cambiar el Pedido #${id} porque ya está en "Listo".`
+      );
       return;
     }
 
@@ -496,11 +509,11 @@ async function cambiarEstado(id, estado) {
 
     // respaldo local (por si el fetch siguiente tarda)
     const mapField = {
-      "Recibido": "recibido_at",
+      Recibido: "recibido_at",
       "En preparación": "en_preparacion_at",
-      "Listo": "listo_at",
+      Listo: "listo_at",
       "En camino": "en_camino_at",
-      "Entregado": "entregado_at",
+      Entregado: "entregado_at",
     };
     const field = mapField[estado];
     if (field) setLocalTs(id, field, new Date().toISOString());
@@ -556,13 +569,16 @@ function crearTarjeta(p) {
       const remain = HISTORICO_DELAY_MS - ms;
       histHtml = `
         <div class="mb-2 text-[11px] font-bold text-slate-600 dark:text-slate-300">
-          Pasa a histórico en: <span class="hist-countdown">${formatCountdown(remain)}</span>
+          Pasa a histórico en: <span class="hist-countdown">${formatCountdown(
+            remain
+          )}</span>
         </div>
       `;
     }
   }
 
-  const permitirVolver = (p.estado || "") !== "Recibido" && (p.estado || "") !== "Listo";
+  const permitirVolver =
+    (p.estado || "") !== "Recibido" && (p.estado || "") !== "Listo";
 
   return `
     <div
@@ -595,27 +611,39 @@ function crearTarjeta(p) {
       <div class="grid grid-cols-2 gap-2 text-[11px] mb-2">
         <div class="rounded-xl bg-white/70 dark:bg-black/20 border border-black/5 dark:border-white/10 p-2">
           <span class="text-slate-500 dark:text-slate-300">En estado:</span>
-          <span class="font-extrabold text-slate-900 dark:text-white block dur-estado">${formatDuration(d.tEstadoActual)}</span>
+          <span class="font-extrabold text-slate-900 dark:text-white block dur-estado">${formatDuration(
+            d.tEstadoActual
+          )}</span>
         </div>
         <div class="rounded-xl bg-white/70 dark:bg-black/20 border border-black/5 dark:border-white/10 p-2">
           <span class="text-slate-500 dark:text-slate-300">Total:</span>
-          <span class="font-extrabold text-slate-900 dark:text-white block dur-total">${formatDuration(d.tTotal)}</span>
+          <span class="font-extrabold text-slate-900 dark:text-white block dur-total">${formatDuration(
+            d.tTotal
+          )}</span>
         </div>
         <div class="rounded-xl bg-white/70 dark:bg-black/20 border border-black/5 dark:border-white/10 p-2">
           <span class="text-slate-500 dark:text-slate-300">Recibido:</span>
-          <span class="font-bold text-slate-900 dark:text-white block dur-rec">${formatDuration(d.tRec)}</span>
+          <span class="font-bold text-slate-900 dark:text-white block dur-rec">${formatDuration(
+            d.tRec
+          )}</span>
         </div>
         <div class="rounded-xl bg-white/70 dark:bg-black/20 border border-black/5 dark:border-white/10 p-2">
           <span class="text-slate-500 dark:text-slate-300">Preparación:</span>
-          <span class="font-bold text-slate-900 dark:text-white block dur-prep">${formatDuration(d.tPrep)}</span>
+          <span class="font-bold text-slate-900 dark:text-white block dur-prep">${formatDuration(
+            d.tPrep
+          )}</span>
         </div>
         <div class="rounded-xl bg-white/70 dark:bg-black/20 border border-black/5 dark:border-white/10 p-2">
           <span class="text-slate-500 dark:text-slate-300">Listo:</span>
-          <span class="font-bold text-slate-900 dark:text-white block dur-listo">${formatDuration(d.tListo)}</span>
+          <span class="font-bold text-slate-900 dark:text-white block dur-listo">${formatDuration(
+            d.tListo
+          )}</span>
         </div>
         <div class="rounded-xl bg-white/70 dark:bg-black/20 border border-black/5 dark:border-white/10 p-2">
           <span class="text-slate-500 dark:text-slate-300">Camino:</span>
-          <span class="font-bold text-slate-900 dark:text-white block dur-camino">${formatDuration(d.tCamino)}</span>
+          <span class="font-bold text-slate-900 dark:text-white block dur-camino">${formatDuration(
+            d.tCamino
+          )}</span>
         </div>
       </div>
 
@@ -757,7 +785,11 @@ function checkDemoras() {
 
     let until = 0;
     try {
-      until = parseInt(localStorage.getItem(keyPosponer(p.id, p.estado)) || "0", 10) || 0;
+      until =
+        parseInt(
+          localStorage.getItem(keyPosponer(p.id, p.estado)) || "0",
+          10
+        ) || 0;
     } catch (_) {
       until = 0;
     }
@@ -893,8 +925,11 @@ async function guardarDetallePedido() {
     }
 
     // actualiza cache local
-    const idx = pedidosCache.findIndex((p) => String(p.id) === String(detalleAbierto.id));
-    if (idx >= 0) pedidosCache[idx] = { ...pedidosCache[idx], resumen_pedido: nuevo };
+    const idx = pedidosCache.findIndex(
+      (p) => String(p.id) === String(detalleAbierto.id)
+    );
+    if (idx >= 0)
+      pedidosCache[idx] = { ...pedidosCache[idx], resumen_pedido: nuevo };
 
     detalleAbierto.originalText = nuevo;
     syncDetalleButtons();
@@ -919,7 +954,9 @@ async function imprimirPedido(id) {
     }
 
     if (!config.nombre) {
-      showModal("No hay una impresora configurada. Ve a 'Configurar impresora' en el menú.");
+      showModal(
+        "No hay una impresora configurada. Ve a 'Configurar impresora' en el menú."
+      );
       return;
     }
 
@@ -999,4 +1036,105 @@ async function cerrarSesion() {
     showModal("No se pudo cerrar la sesión.");
     console.error("Error cerrando sesión:", err);
   }
+}
+function getUsuarioLoginSafe() {
+  try {
+    return JSON.parse(localStorage.getItem("usuario") || "null");
+  } catch (_) {
+    return null;
+  }
+}
+
+function getPuntoVenta(usuario) {
+  return (
+    usuario?.PuntoVenta ||
+    usuario?.puntoventa ||
+    usuario?.puntoVenta ||
+    "Sin punto de venta"
+  );
+}
+
+function getConfigImpresoraSafe() {
+  try {
+    return JSON.parse(localStorage.getItem("configImpresora") || "{}");
+  } catch (_) {
+    return {};
+  }
+}
+
+/**
+ * Abre Gmail con el correo prellenado.
+ * Intenta abrir la app de Gmail (Android/iOS). Si no, cae a Gmail Web.
+ */
+function abrirGmailPrefill({ to, subject, body }) {
+  const gmailWeb =
+    "https://mail.google.com/mail/?view=cm&fs=1" +
+    `&to=${encodeURIComponent(to)}` +
+    `&su=${encodeURIComponent(subject)}` +
+    `&body=${encodeURIComponent(body)}`;
+
+  // URL scheme para abrir app Gmail (puede depender del dispositivo)
+  const gmailApp =
+    "googlegmail:///co?to=" +
+    encodeURIComponent(to) +
+    "&subject=" +
+    encodeURIComponent(subject) +
+    "&body=" +
+    encodeURIComponent(body);
+
+  // Intento 1: app (móvil)
+  // Si falla (desktop o móvil sin Gmail), abrimos web.
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // Intentar abrir app
+    window.location.href = gmailApp;
+
+    // Fallback a web si no abre (muy común)
+    setTimeout(() => {
+      window.open(gmailWeb, "_blank", "noopener,noreferrer");
+    }, 600);
+  } else {
+    // Desktop: Gmail web
+    window.open(gmailWeb, "_blank", "noopener,noreferrer");
+  }
+}
+
+/**
+ * Botón del footer: soporte exclusivo del local
+ */
+function contactarSoporteGmail(tipo = "App") {
+  const usuario = getUsuarioLoginSafe();
+  const pv = getPuntoVenta(usuario);
+
+  const cfg = getConfigImpresoraSafe();
+  const impresora = cfg?.nombre
+    ? `${cfg.nombre}:${cfg.puerto || cfg.port || 9100}`
+    : "No configurada";
+
+  // Puedes cambiar este correo al real del soporte
+  const to = "ingenierosistemas@tierraquerida.com.co";
+
+  const subject = `[Soporte ${pv}] ${tipo}`;
+
+  const body = `Hola soporte,
+
+Necesito ayuda con: ${tipo}
+
+Datos del local:
+- Punto de venta: ${pv}
+- Usuario (correo): ${usuario?.correo || "—"}
+
+Impresora actual:
+- ${impresora}
+
+Descripción del problema:
+(Escribe aquí qué pasó, qué estabas haciendo, y si hay un ID de pedido)
+
+IDs de pedidos relacionados (si aplica):
+- Pedido #_____
+
+Gracias.`;
+
+  abrirGmailPrefill({ to, subject, body });
 }

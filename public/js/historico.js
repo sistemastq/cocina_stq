@@ -72,7 +72,9 @@
 
     const inicioTotal = recibido || created;
     const finTotal = entregado || now;
-    const tTotal = inicioTotal ? finTotal.getTime() - inicioTotal.getTime() : null;
+    const tTotal = inicioTotal
+      ? finTotal.getTime() - inicioTotal.getTime()
+      : null;
 
     return { tRec, tPrep, tListo, tCamino, tTotal };
   }
@@ -108,7 +110,9 @@
         <td class="px-4 py-3">${escapeHtml(p.celular_cliente)}</td>
         <td class="px-4 py-3">${escapeHtml(p.direccion_cliente)}</td>
         <td class="px-4 py-3 font-bold">${escapeHtml(p.estado)}</td>
-        <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">${formatDateTime(p.created_at)}</td>
+        <td class="px-4 py-3 text-xs text-slate-500 dark:text-slate-400">${formatDateTime(
+          p.created_at
+        )}</td>
         <td class="px-4 py-3">${formatDuration(d.tRec)}</td>
         <td class="px-4 py-3">${formatDuration(d.tPrep)}</td>
         <td class="px-4 py-3">${formatDuration(d.tListo)}</td>
@@ -146,7 +150,12 @@
         const nombre = safeText(p.nombre_cliente).toLowerCase();
         const cel = safeText(p.celular_cliente).toLowerCase();
         const dir = safeText(p.direccion_cliente).toLowerCase();
-        return id.includes(txt) || nombre.includes(txt) || cel.includes(txt) || dir.includes(txt);
+        return (
+          id.includes(txt) ||
+          nombre.includes(txt) ||
+          cel.includes(txt) ||
+          dir.includes(txt)
+        );
       });
     }
 
@@ -163,7 +172,9 @@
       return [];
     }
 
-    const url = `/api/pedidos/historico?correo=${encodeURIComponent(usuarioLogin.correo)}`;
+    const url = `/api/pedidos/historico?correo=${encodeURIComponent(
+      usuarioLogin.correo
+    )}`;
     const res = await fetch(url);
 
     if (!res.ok) {
@@ -227,3 +238,105 @@
     }
   });
 })();
+
+function getUsuarioLoginSafe() {
+  try {
+    return JSON.parse(localStorage.getItem("usuario") || "null");
+  } catch (_) {
+    return null;
+  }
+}
+
+function getPuntoVenta(usuario) {
+  return (
+    usuario?.PuntoVenta ||
+    usuario?.puntoventa ||
+    usuario?.puntoVenta ||
+    "Sin punto de venta"
+  );
+}
+
+function getConfigImpresoraSafe() {
+  try {
+    return JSON.parse(localStorage.getItem("configImpresora") || "{}");
+  } catch (_) {
+    return {};
+  }
+}
+
+/**
+ * Abre Gmail con el correo prellenado.
+ * Intenta abrir la app de Gmail (Android/iOS). Si no, cae a Gmail Web.
+ */
+function abrirGmailPrefill({ to, subject, body }) {
+  const gmailWeb =
+    "https://mail.google.com/mail/?view=cm&fs=1" +
+    `&to=${encodeURIComponent(to)}` +
+    `&su=${encodeURIComponent(subject)}` +
+    `&body=${encodeURIComponent(body)}`;
+
+  // URL scheme para abrir app Gmail (puede depender del dispositivo)
+  const gmailApp =
+    "googlegmail:///co?to=" +
+    encodeURIComponent(to) +
+    "&subject=" +
+    encodeURIComponent(subject) +
+    "&body=" +
+    encodeURIComponent(body);
+
+  // Intento 1: app (móvil)
+  // Si falla (desktop o móvil sin Gmail), abrimos web.
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // Intentar abrir app
+    window.location.href = gmailApp;
+
+    // Fallback a web si no abre (muy común)
+    setTimeout(() => {
+      window.open(gmailWeb, "_blank", "noopener,noreferrer");
+    }, 600);
+  } else {
+    // Desktop: Gmail web
+    window.open(gmailWeb, "_blank", "noopener,noreferrer");
+  }
+}
+
+/**
+ * Botón del footer: soporte exclusivo del local
+ */
+function contactarSoporteGmail(tipo = "App") {
+  const usuario = getUsuarioLoginSafe();
+  const pv = getPuntoVenta(usuario);
+
+  const cfg = getConfigImpresoraSafe();
+  const impresora = cfg?.nombre
+    ? `${cfg.nombre}:${cfg.puerto || cfg.port || 9100}`
+    : "No configurada";
+
+  // Puedes cambiar este correo al real del soporte
+  const to = "ingenierosistemas@tierraquerida.com.co";
+
+  const subject = `[Soporte ${pv}] ${tipo}`;
+
+  const body = `Hola soporte,
+
+Necesito ayuda con: ${tipo}
+
+Datos del local:
+- Punto de venta: ${pv}
+- Usuario (correo): ${usuario?.correo || "—"}
+
+Impresora actual:
+- ${impresora}
+
+Descripción del problema:
+(Escribe aquí qué pasó, qué estabas haciendo, y si hay un ID de pedido)
+
+IDs de pedidos relacionados (si aplica):
+- Pedido #_____
+
+Gracias.`;
+
+  abrirGmailPrefill({ to, subject, body });
+}
